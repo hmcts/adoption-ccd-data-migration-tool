@@ -1,6 +1,0 @@
-{
-  "connectionString": "${file:/mnt/secrets/ccd-case-migration/app-insights-connection-string}",
-  "role": {
-    "name": "ccd-migration"
-  }
-}

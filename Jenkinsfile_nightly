@@ -2,14 +2,14 @@
 
 properties([
   // H allow predefined but random minute see https://en.wikipedia.org/wiki/Cron#Non-standard_characters
-  pipelineTriggers([cron('H 08 * * 1-5')])
+  pipelineTriggers([cron('H 07 * * 1-5')])
 ])
 
 @Library("Infrastructure")
 
 def type = "java"
-def product = "ccd"
-def component = "migration"
+def product = "adoption"
+def component = "cron-ccd-data-migration-tool"
 
 withNightlyPipeline(type, product, component) {
   enableAksStagingDeployment()

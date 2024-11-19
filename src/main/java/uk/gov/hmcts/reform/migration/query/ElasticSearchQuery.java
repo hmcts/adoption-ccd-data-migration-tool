@@ -5,21 +5,28 @@ import lombok.Builder;
 @Builder
 public class ElasticSearchQuery {
 
-    private static final String START_QUERY = """
-        {
-          "query": {
-            "match_all": {}
-          },
-          "_source": [
-            "reference"
-          ],
-          "size": %s,
-          "sort": [
-            {
-              "reference.keyword": "asc"
-            }
-          ]
-          """;
+    private static final String START_QUERY = "{\n"
+        + "  \"query\": {\n"
+        + "    \"bool\": {\n"
+        + "      \"filter\": {\n"
+        + "        \"exists\": {\n"
+        + "          \"field\": \"data.court\"\n"
+        + "        }\n"
+        + "      }\n"
+        + "    }\n"
+        + "  },\n"
+        + "  \"size\": %s,\n"
+        + "  \"_source\": [\n"
+        + "    \"reference\",\n"
+        + "    \"jurisdiction\"\n"
+        + "  ],\n"
+        + "  \"sort\": [\n"
+        + "    {\n"
+        + "      \"reference.keyword\": {\n"
+        + "        \"order\": \"asc\"\n"
+        + "      }\n"
+        + "    }\n"
+        + "  ]";
 
     private static final String END_QUERY = "\n}";
 
@@ -38,10 +45,16 @@ public class ElasticSearchQuery {
     }
 
     private String getInitialQuery() {
-        return String.format(START_QUERY, size) + END_QUERY;
+        return String.join("",
+            String.format(START_QUERY, size),
+            END_QUERY);
     }
 
     private String getSubsequentQuery() {
-        return String.format(START_QUERY, size) + "," + String.format(SEARCH_AFTER, searchAfterValue) + END_QUERY;
+        return String.join("",
+            String.format(START_QUERY, size),
+            ",",
+            String.format(SEARCH_AFTER, searchAfterValue),
+            END_QUERY);
     }
 }

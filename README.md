@@ -1,89 +1,103 @@
-# ccd-case-migration-starter
+# Adoption CCD Data Migration Tool
 
-CCD Case Migration Starter provides a framework for data migrations within CCD , to assist with case migrations that are required when the case definition changes in a way that requires existing cases to be updated to match the new case definition.
+## Basic overview
 
-The framework runs the following process :-
+The basic premise of this tool is to be an implementaion of [hmcts/ccd-case-migration-starter](https://github.com/hmcts/ccd-case-migration-starter).
 
-![diagram](docs/process.png)
+It works by accessing the ccd-data-store-api as the system user, grabbing and filtering all cases, and then migrating the filtered cases.
+To perform the migration there needs to be an event defined in the consuming case type that is defined with the ID `migrateCase`, this is defined
+[here](https://github.com/hmcts/fpl-ccd-configuration/blob/bc67b4f1590e0d5999abad30819c8f5a7fc0e391/ccd-definition/CaseEvent/CareSupervision/MultiState.json#L5)
+in the FPL repo.
+This event is then triggered by the `CaseMigrationProcessor` defined in the [hmcts/ccd-case-migration-starter](https://github.com/hmcts/ccd-case-migration-starter),
+and as it is a CCD event it can have the standard CCD hooks, i.e. `about-to-start`, `about-to-submit`, `submitted`. FPL makes use of the `about-to-submit` hook to then perform the [main part of the migration](https://github.com/hmcts/fpl-ccd-configuration/blob/master/service/src/main/java/uk/gov/hmcts/reform/fpl/controllers/support/MigrateCaseController.java).
 
-The source code is maintained as a template within GitHub and is typically either cloned by a service team to establish a migration capability , or branched within the repository.
+### More info
 
-CCD Case Migration Starter framework source code is located in HMCTS GitHub repository  https://github.com/hmcts/ccd-case-migration-starter
+For more info on the tool and how to use it check out [hmcts/ccd-case-migration-starter](https://github.com/hmcts/ccd-case-migration-starter)
 
-It is built by Jenkins using HMCTS Jenkins job  https://build.platform.hmcts.net/job/HMCTS_a_to_c/job/ccd-case-migration-starter/
+## Build
 
-## Getting started
+To build the project run
 
-To utilise the CCD Case Migration Starter :-
-
-1. Clone the GitHub repository and create a branch for the migration task.
-
-2. Make the required source code changes for the migration task (see section below).
-
-3. Create a pull request.
-
-4. Request PlatOps to copy the JAR that was built using the pipeline from the repository to the bastion server for operation.
-
-## Required source code changes
-
-As a minimum , the source code changes described below should be made.
-
-Create a Java class which implements `uk.gov.hmcts.reform.migration.service.DataMigrationService` interface in similar way as shown below :-
-
-```java
-package uk.gov.hmcts.reform.migration.service;
-
-import org.springframework.stereotype.Component;
-import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
-
-import java.util.function.Predicate;
-
-@Component
-public class DataMigrationServiceImpl implements DataMigrationService {
-    @Override
-    public Predicate<CaseDetails> accepts() {
-        return true; // Predicate that allows to narrow number of cases that gets migrated
-    }
-
-    @Override
-    public void migrate(CaseDetails caseDetails) {
-        // Case data migration logic goes here
-    }
-}
+```shell
+./gradlew clean build
 ```
 
-Ensure that the application properties below are configured as required in `application.properties` file :-
+this will generate a jar in the `build/libs` directory which can then be used when running the migration.
 
-```properties
-idam.api.url= # IDAM API URL used to authenticate system update user (pointing to localhost version of IDAM API by default)
-idam.client.id= # IDAM OAuth2 client ID used to authenticate system update user
-idam.client.secret= # IDAM OAuth2 client secret used to authenticate system update user
-idam.client.redirect_uri= # IDAM OAuth2 redirect URL used to authenticate system update user
+## Running
 
-idam.s2s-auth.url= # S2S API URL used to authenticate service (pointing to localhost version of S2S API by default)
-idam.s2s-auth.microservice= # S2S micro service name used to authenticate service
-idam.s2s-auth.totp_secret= # S2S micro service secret used to authenticate service
+To run the jar you will need to do the following
 
-core_case_data.api.url= # CCD data store API URL used to fetch / update case details (pointing to localhost version of CCD by default)
-
-migration.idam.username= # IDAM username of a system update user that performs data migration
-migration.idam.password= # IDAM password of a system update user that performs data migration
-migration.jurisdiction= # CCD jurisdiction that data migration is run against
-migration.casetype= # CCD case type that data migration is run against
-migration.caseId= # optional CCD case ID in case only one case needs to be migrated
-
-case-migration.elasticsearch.querySize= # Elasticsearch query size limit
-case-migration.processing.limit= # Migration processing size limit
+```shell
+java -jar \
+-Dspring.application.name="fpl-ccd-case-migration-tool" \
+-Didam.api.url="https://idam-api.aat.platform.hmcts.net" \
+-Didam.client.id="fpl_case_service" \
+-Didam.client.secret="[VALUE IN VAULT]" \
+-Didam.client.redirect_uri="https://fpl-case-service-aat.service.core-compute-aat.internal/oauth2/callback" \
+-Dcore_case_data.api.url="http://ccd-data-store-api-aat.service.core-compute-aat.internal" \
+-Didam.s2s-auth.url="http://rpe-service-auth-provider-aat.service.core-compute-aat.internal" \
+-Didam.s2s-auth.microservice="fpl_case_service" \
+-Didam.s2s-auth.totp_secret="[VALUE IN VAULT]" \
+-Dmigration.idam.username="fpl-system-update@mailnesia.com" \
+-Dmigration.idam.password="[VALUE IN VAULT]" \
+-Dmigration.jurisdiction="PUBLICLAW" \
+-Dmigration.caseType="CARE_SUPERVISION_EPO" \
+-Dlogging.level.root="ERROR" \
+-Dlogging.level.uk.gov.hmcts.reform="INFO" \
+-Dfeign.client.config.default.connectTimeout="60000" \
+-Dfeign.client.config.default.readTimeout="60000" \
+PATH/TO/MIGRATION.jar
 ```
 
-## Unit tests
+where
 
-To run all unit tests please execute following command :-
+- `idam.client.secret`
+- `idam.s2s-auth.totp_secret`
+- `migration.idam.password`
 
-```bash
-    ./gradlew test
+can all be found in the fpl-case-service vault.
+
+Note that the parameters given are using AAT environment as an example.
+
+### Extra env vars
+```shell
+case-migration.timeout=${CASE_MIGRATION_TIMEOUT:7200} # global timeout for the migration tool (seconds) default = 2 hours
+
+case-migration.case_id_list.mapping=${CASE_ID_LIST_MAPPING:} # format DFPL-ID=>CASEID1|CASEID2|CASEID3;DFPL-ID2=>CASEID4
+case-migration.use_case_id_mapping=${USE_CASE_ID_MAPPING:true} # whether to use the mapping or the ES query - if false make sure to have an ES query in DataMigrationServiceImpl
+case-migration.retry_failures=${RETRY_FAILURES:false} # whether to retry failed cases
+
+default.thread.delay=${DEFAULT_THREAD_DELAY:0} # whether to artificially slow down the tool by sleeping a thread after a successful migration (seconds) default = no delay
 ```
 
-## License
+## Common issues
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### Running
+
+When running the migration we are making the requests as the system user, as such if the user does not have
+[permission](https://github.com/hmcts/fpl-ccd-configuration/blob/master/ccd-definition/AuthorisationCaseField/CareSupervision/system-update.json)
+to the fields that it needs to update then the ccd-data-store-api could return errors when validating the case data at
+the end of the migration. To ensure that this doesn't occur make sure that the system user has access to all fields
+being operated on in both the
+[DataMigrationServiceImpl](src/main/java/uk/gov/hmcts/reform/migration/service/DataMigrationServiceImpl.java)
+and the
+[controller](https://github.com/hmcts/fpl-ccd-configuration/blob/master/service/src/main/java/uk/gov/hmcts/reform/fpl/controllers/support/MigrateCaseController.java)
+handling the callback.
+
+### Dependencies
+
+With the deprecation of JCenter the dependencies
+
+```groovy
+compile group: 'uk.gov.hmcts.reform.ccd-case-migration', name: 'processor', version: '3.0.0'
+compile group: 'uk.gov.hmcts.reform.ccd-case-migration', name: 'domain', version: '3.0.0'
+```
+
+are not available to be downloaded, to ensure that you can build and run migrations you can clone
+the [stater repo](https://github.com/hmcts/ccd-case-migration-starter) and compile the dependencies locally using
+
+```shell
+./gradlew clean build publishToMavenLocal
+```

@@ -1,5 +1,7 @@
 package uk.gov.hmcts.reform.migration.auth;
 
+import java.util.Objects;
+
 @SuppressWarnings("squid:S1118")
 public final class AuthUtil {
 
@@ -10,7 +12,7 @@ public final class AuthUtil {
     }
 
     public static String getBearerToken(String token) {
-        if (token == null || token.isBlank()) {
+        if (Objects.isNull(token) || token.isBlank()) {
             return token;
         }
 
