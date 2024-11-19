@@ -1,49 +1,63 @@
 package uk.gov.hmcts.reform.migration.service;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static uk.gov.hmcts.reform.migration.service.DataMigrationService.MIGRATION_ID_KEY;
 
-@RunWith(MockitoJUnitRunner.class)
-public class DataMigrationServiceImplTest {
 
-    private DataMigrationServiceImpl service = new DataMigrationServiceImpl();
+@ExtendWith(MockitoExtension.class)
+class DataMigrationServiceImplTest {
 
-    @Test
-    public void shouldReturnTrueForCaseDetailsPassed() {
-        CaseDetails caseDetails = CaseDetails.builder()
-            .id(1234L)
+    private static final String INVALID_MIGRATION_ID = "NOT_A_MIGRATION";
+
+    private DataMigrationServiceImpl dataMigrationService;
+
+    CaseDetails caseDetails;
+
+    @BeforeEach
+    void setUp() {
+        dataMigrationService = new DataMigrationServiceImpl();
+
+        Map<String, String> court = Map.of("code", "344",
+            "name", "Family Court sitting at Swansea",
+            "email", "FamilyPublicLaw+sa@gmail.com"
+        );
+
+        caseDetails = CaseDetails.builder()
+            .data(Map.of("court", court))
             .build();
-        assertTrue(service.accepts().test(caseDetails));
     }
 
     @Test
-    public void shouldReturnFalseForCaseDetailsNull() {
-        assertFalse(service.accepts().test(null));
+    void shouldReturnTrueWhenCourtPresent() {
+        assertThat(dataMigrationService.accepts().test(caseDetails)).isTrue();
+    }
+
+
+    @Test
+    void shouldThrowExceptionWhenMigrationKeyIsNotSet() {
+        assertThatThrownBy(() -> dataMigrationService.migrate(Map.of(), null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage("Migration ID must not be null");
     }
 
     @Test
-    public void shouldReturnPassedDataWhenMigrateCalled() {
+    void shouldThrowExceptionWhenMigrationKeyIsInvalid() {
         Map<String, Object> data = new HashMap<>();
-        Map<String, Object> result = service.migrate(data);
-        assertNotNull(result);
-        assertEquals(data, result);
+        assertThatThrownBy(() -> dataMigrationService.migrate(data, INVALID_MIGRATION_ID))
+            .isInstanceOf(NoSuchElementException.class)
+            .hasMessage("No migration mapped to " + INVALID_MIGRATION_ID);
+        assertThat(data.get(MIGRATION_ID_KEY)).isNull();
     }
 
-    @Test
-    public void shouldReturnNullWhenDataIsNotPassed() {
-        Map<String, Object> result = service.migrate(null);
-        assertNull(result);
-        assertEquals(null, result);
-    }
 }
