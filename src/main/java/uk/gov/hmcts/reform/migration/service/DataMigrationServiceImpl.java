@@ -29,11 +29,11 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
 
     public static final String COURT = "court";
     private final Map<String, Function<Map<String, Object>, Map<String, Object>>> migrations = Map.of(
-        "ADOP-1234", this::triggerOnlyMigration
+        "ADOP-log", this::triggerOnlyMigration
         );
 
     private final Map<String, EsQuery> queries = Map.of(
-        "ADOP-5678", this.closedCases()
+        "ADOP-1234", this.closedCases()
     );
 
     private EsQuery closedCases() {
