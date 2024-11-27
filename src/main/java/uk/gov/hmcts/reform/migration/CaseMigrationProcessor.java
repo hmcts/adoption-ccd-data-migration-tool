@@ -29,7 +29,7 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 @Slf4j
 @Component
 public class CaseMigrationProcessor {
-    public static final String EVENT_ID = "migrateCase";
+    public static final String EVENT_ID = "migrate-case";
     public static final String EVENT_SUMMARY = "Migrate Case";
     public static final String EVENT_DESCRIPTION = "Migrate Case";
     public static final String LOG_STRING = "-----------------------------------------";
