@@ -29,19 +29,21 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
 
     public static final String COURT = "court";
     private final Map<String, Function<Map<String, Object>, Map<String, Object>>> migrations = Map.of(
-        "ADOP-log", this::triggerOnlyMigration
+        "ADOP-log", this::triggerOnlyMigration,
+        "ADOP-test", this::triggerOnlyMigration
         );
 
     private final Map<String, EsQuery> queries = Map.of(
-        "ADOP-1234", this.closedCases()
+        "ADOP-log", this.casesInState("Draft"),
+        "ADOP-test", this.casesInState("Draft")
     );
 
-    private EsQuery closedCases() {
-        final MatchQuery closedState = MatchQuery.of("state", "CLOSED");
+    private EsQuery casesInState(String state) {
+        final MatchQuery matchState = MatchQuery.of("state", state);
 
         return BooleanQuery.builder()
             .must(Must.builder()
-                .clauses(List.of(closedState))
+                .clauses(List.of(matchState))
                 .build())
             .build();
     }
