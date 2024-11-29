@@ -167,13 +167,13 @@ repositories {
 ext {
   log4JVersion = "2.20.0"
   restAssuredVersion = '4.3.0!!'
-  lombokVersion = "1.18.30"
+  lombokVersion = "1.18.36"
   junit_version = "4.12"
   junitJupiterVersion = '5.7.1'
   junitVintageVersion = '5.7.1'
   powermockVersion = '2.0.9'
   springSecurity   =  '5.8.7'
-  springCloudVersion = '2021.0.8'
+  springCloudVersion = '2021.0.9'
 }
 
 ext['jackson.version'] = '2.14.1'
