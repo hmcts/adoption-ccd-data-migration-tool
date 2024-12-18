@@ -116,6 +116,6 @@ class DataMigrationServiceImplTest {
         expectedTtl.put("Suspend", "NO");
         expectedTtl.put("SystemTTL", expectedSystemTtl);
 
-        assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInDraftState).equals(expectedTtl));
+        assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInDraftState).get("TTL")).isEqualTo(expectedTtl);
     }
 }

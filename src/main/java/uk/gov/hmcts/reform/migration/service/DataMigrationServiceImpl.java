@@ -109,16 +109,18 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
     }
 
     public Map<String, Object> triggerTtlMigration(CaseDetails caseDetails) {
-        HashMap<String, Object> ttlMap = new HashMap();
+        HashMap<String, Object> ttlMap = new HashMap<>();
         ttlMap.put("OverrideTTL", null);
         ttlMap.put("Suspend", "NO");
 
         switch(caseDetails.getState()){
             case "Draft":
-                ttlMap.put("SystemTTL", caseDetails.getCreatedDate().plusDays(90));
+                ttlMap.put("SystemTTL", caseDetails.getCreatedDate().toLocalDate().plusDays(90));
                 break;
             case "AwaitingPayment":
+                @SuppressWarnings("unchecked")
                 Map<String, Object> application = (Map<String, Object>) caseDetails.getData().get("application");
+                @SuppressWarnings("unchecked")
                 List<Element<Map<String,Object>>> applicationPayments =
                     (List<Element<Map<String,Object>>>) application.get("applicationPayments");
 
@@ -134,13 +136,14 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
                 ttlMap.put("SystemTTL", convertValueToLocalDate(oldestApplicationCreatedDate).plusDays(36524));
                 break;
             case "Submitted":
+                @SuppressWarnings("unchecked")
                 Map<String, Object> applicationData = (Map<String, Object>) caseDetails.getData().get("application");
                 LocalDate dateSubmitted = (LocalDate) applicationData.get("dateSubmitted");
 
                 ttlMap.put("SystemTTL", convertValueToLocalDate(dateSubmitted).plusDays(36524));
                 break;
             case "LaSubmitted":
-                ttlMap.put("SystemTTL", caseDetails.getLastModified().plusDays(36524));
+                ttlMap.put("SystemTTL", caseDetails.getLastModified().toLocalDate().plusDays(36524));
                 break;
             default:
                 throw new AssertionError(format("Migration 2555, case with id: %s " +
