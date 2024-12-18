@@ -113,7 +113,7 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
         ttlMap.put("OverrideTTL", null);
         ttlMap.put("Suspend", "NO");
 
-        switch(caseDetails.getState()){
+        switch (caseDetails.getState()){
             case "Draft":
                 ttlMap.put("SystemTTL", caseDetails.getCreatedDate().toLocalDate().plusDays(90));
                 break;
@@ -146,8 +146,8 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
                 ttlMap.put("SystemTTL", caseDetails.getLastModified().toLocalDate().plusDays(36524));
                 break;
             default:
-                throw new AssertionError(format("Migration 2555, case with id: %s " +
-                    "not in valid state for TTL migration", caseDetails.getId()));
+                throw new AssertionError(format("Migration 2555, case with id: %s "
+                    + "not in valid state for TTL migration", caseDetails.getId()));
         }
 
         HashMap<String, Object> updates = new HashMap<>();
