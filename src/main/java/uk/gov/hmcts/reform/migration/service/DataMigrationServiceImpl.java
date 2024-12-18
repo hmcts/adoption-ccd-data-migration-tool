@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import uk.gov.hmcts.reform.adoption.model.common.Element;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.migration.query.BooleanQuery;
 import uk.gov.hmcts.reform.migration.query.EsQuery;
@@ -13,6 +14,9 @@ import uk.gov.hmcts.reform.migration.query.MatchQuery;
 import uk.gov.hmcts.reform.migration.query.Must;
 import uk.gov.hmcts.reform.migration.query.MustNot;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +24,7 @@ import java.util.NoSuchElementException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
@@ -28,8 +33,9 @@ import static java.util.Objects.requireNonNull;
 public class DataMigrationServiceImpl implements DataMigrationService<Map<String, Object>> {
 
     public static final String COURT = "court";
-    private final Map<String, Function<Map<String, Object>, Map<String, Object>>> migrations = Map.of(
-        "ADOP-log", this::triggerOnlyMigration
+    private final Map<String, Function<CaseDetails, Map<String, Object>>> migrations = Map.of(
+        "ADOP-log", this::triggerOnlyMigration,
+        "ADOP-2555", this::triggerTtlMigration
         );
 
     private final Map<String, EsQuery> queries = Map.of(
@@ -69,14 +75,14 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
     }
 
     @Override
-    public Map<String, Object> migrate(Map<String, Object> data, String migrationId) {
+    public Map<String, Object> migrate(CaseDetails caseDetails, String migrationId) {
         requireNonNull(migrationId, "Migration ID must not be null");
         if (!migrations.containsKey(migrationId)) {
             throw new NoSuchElementException("No migration mapped to " + migrationId);
         }
 
         // Perform Migration
-        return migrations.get(migrationId).apply(data);
+        return migrations.get(migrationId).apply(caseDetails);
     }
 
     private EsQuery topLevelFieldExistsQuery(String field) {
@@ -97,8 +103,56 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
             .build();
     }
 
-    private Map<String, Object> triggerOnlyMigration(Map<String, Object> data) {
+    private Map<String, Object> triggerOnlyMigration(CaseDetails caseDetails) {
         // do nothing
         return new HashMap<>();
+    }
+
+    public Map<String, Object> triggerTtlMigration(CaseDetails caseDetails) {
+        HashMap<String, Object> ttlMap = new HashMap();
+        ttlMap.put("OverrideTTL", null);
+        ttlMap.put("Suspend", "NO");
+
+        switch(caseDetails.getState()){
+            case "Draft":
+                ttlMap.put("SystemTTL", caseDetails.getCreatedDate().plusDays(90));
+                break;
+            case "AwaitingPayment":
+                Map<String, Object> application = (Map<String, Object>) caseDetails.getData().get("application");
+                List<Element<Map<String,Object>>> applicationPayments =
+                    (List<Element<Map<String,Object>>>) application.get("applicationPayments");
+
+                applicationPayments.sort((element1, element2) ->
+                    convertValueToLocalDate(element1.getValue().get("created"))
+                        .compareTo(convertValueToLocalDate(element2.getValue().get("created"))));
+
+                LocalDateTime oldestApplicationCreatedDate = (LocalDateTime) applicationPayments
+                    .get(0)
+                    .getValue()
+                    .get("created");
+
+                ttlMap.put("SystemTTL", convertValueToLocalDate(oldestApplicationCreatedDate).plusDays(36524));
+                break;
+            case "Submitted":
+                Map<String, Object> applicationData = (Map<String, Object>) caseDetails.getData().get("application");
+                LocalDate dateSubmitted = (LocalDate) applicationData.get("dateSubmitted");
+
+                ttlMap.put("SystemTTL", convertValueToLocalDate(dateSubmitted).plusDays(36524));
+                break;
+            case "LaSubmitted":
+                ttlMap.put("SystemTTL", caseDetails.getLastModified().plusDays(36524));
+                break;
+            default:
+                throw new AssertionError(format("Migration 2555, case with id: %s " +
+                    "not in valid state for TTL migration", caseDetails.getId()));
+        }
+
+        HashMap<String, Object> updates = new HashMap<>();
+        updates.put("TTL", ttlMap);
+        return updates;
+    }
+
+    public LocalDate convertValueToLocalDate(Object dateOnCase) {
+        return LocalDate.parse(dateOnCase.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 }
