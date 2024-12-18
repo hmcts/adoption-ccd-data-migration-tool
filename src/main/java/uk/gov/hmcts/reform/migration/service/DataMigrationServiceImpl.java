@@ -113,7 +113,7 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
         ttlMap.put("OverrideTTL", null);
         ttlMap.put("Suspend", "NO");
 
-        switch (caseDetails.getState()){
+        switch (caseDetails.getState()) {
             case "Draft":
                 ttlMap.put("SystemTTL", caseDetails.getCreatedDate().toLocalDate().plusDays(90));
                 break;
