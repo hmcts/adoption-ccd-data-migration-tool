@@ -31,6 +31,8 @@ class DataMigrationServiceImplTest {
     CaseDetails caseDetailsInAwaitingPaymentState;
     CaseDetails caseDetailsInSubmittedState;
     CaseDetails caseDetailsInLaSubmittedState;
+    CaseDetails caseDetailsInAwaitingPaymentStateNoApplicationPayment;
+    CaseDetails caseDetailsInSubmittedStateNoApplication;
 
     @BeforeEach
     void setUp() {
@@ -46,38 +48,40 @@ class DataMigrationServiceImplTest {
             .build();
 
         caseDetailsInDraftState = CaseDetails.builder()
+            .id(1L)
             .state("Draft")
             .createdDate(LocalDateTime.of(2024, 1, 1, 0, 0))
             .data(Map.of("court", court))
             .build();
 
         caseDetailsInAwaitingPaymentState = CaseDetails.builder()
+            .id(1L)
             .state("AwaitingPayment")
             .createdDate(LocalDateTime.of(2024, 1, 1, 0, 0))
             .data(Map.of(
                 "court", court,
                 "application", Map.of(
                     "dateSubmitted", LocalDate.of(2024, 1, 15),
-                    "applicationPayments",
-                        List.of(
-                            Element.newElement(Map.of(
+                    "applicationPayments", List.of(
+                        Element.newElement(Map.of(
                             "created", LocalDateTime.of(2024, 1, 17, 0, 0),
+                            "amount", 350
+                        )),
+                        Element.newElement(Map.of(
+                            "created", LocalDateTime.of(2024, 1, 16, 0, 0),
                             "amount", 250
-                            )),
-                            Element.newElement(Map.of(
-                                "created", LocalDateTime.of(2024, 1, 16, 0, 0),
-                                "amount", 350
-                            )),
-                            Element.newElement(Map.of(
-                                "created", LocalDateTime.of(2024, 1, 18, 0, 0),
-                                "amount", 350
-                            ))
-                        )
+                        )),
+                        Element.newElement(Map.of(
+                            "created", LocalDateTime.of(2024, 1, 18, 0, 0),
+                            "amount", 450
+                        ))
+                    )
                 )
             ))
             .build();
 
         caseDetailsInSubmittedState = CaseDetails.builder()
+            .id(1L)
             .state("Submitted")
             .createdDate(LocalDateTime.of(2024, 1, 1, 0, 0))
             .data(Map.of(
@@ -89,9 +93,29 @@ class DataMigrationServiceImplTest {
             .build();
 
         caseDetailsInLaSubmittedState = CaseDetails.builder()
+            .id(1L)
             .state("LaSubmitted")
             .createdDate(LocalDateTime.of(2024, 1, 1, 0, 0))
             .lastModified(LocalDateTime.of(2024, 2, 1, 0, 0))
+            .data(Map.of("court", court))
+            .build();
+
+        caseDetailsInAwaitingPaymentStateNoApplicationPayment = CaseDetails.builder()
+            .id(1L)
+            .state("AwaitingPayment")
+            .createdDate(LocalDateTime.of(2024, 1, 1, 0, 0))
+            .data(Map.of(
+                "court", court,
+                "application", Map.of(
+                    "dateSubmitted", LocalDate.of(2024, 1, 15)
+                )
+            ))
+            .build();
+
+        caseDetailsInSubmittedStateNoApplication = CaseDetails.builder()
+            .id(1L)
+            .state("Submitted")
+            .createdDate(LocalDateTime.of(2024, 1, 1, 0, 0))
             .data(Map.of("court", court))
             .build();
     }
@@ -164,5 +188,21 @@ class DataMigrationServiceImplTest {
 
         assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInLaSubmittedState).get("TTL"))
             .isEqualTo(expectedTtl);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenCaseInAwaitingPaymentStateHasNoApplicationPayments() {
+        assertThatThrownBy(() -> dataMigrationService
+                .triggerTtlMigration(caseDetailsInAwaitingPaymentStateNoApplicationPayment))
+            .isInstanceOf(AssertionError.class)
+            .hasMessage("Migration 2555, case with id: 1 has no applicationPayments in case data as expected");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenCaseInSubmittedStateHasNoApplication() {
+        assertThatThrownBy(() -> dataMigrationService
+            .triggerTtlMigration(caseDetailsInSubmittedStateNoApplication))
+            .isInstanceOf(AssertionError.class)
+            .hasMessage("Migration 2555, case with id: 1 has no application in case data as expected");
     }
 }

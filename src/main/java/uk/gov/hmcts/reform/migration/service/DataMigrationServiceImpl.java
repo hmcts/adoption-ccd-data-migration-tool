@@ -26,6 +26,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
@@ -120,12 +121,24 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
                 break;
             case "AwaitingPayment":
                 @SuppressWarnings("unchecked")
-                Map<String, Object> application = (Map<String, Object>) caseDetails.getData().get("application");
+                Map<String, Object> application = (Map<String, Object>) caseDetails.getData()
+                    .getOrDefault("application", null);
+
+                if (isNull(application)) {
+                    throw new AssertionError(format("Migration 2555, case with id: %s "
+                        + "has no application in case data as expected", caseDetails.getId()));
+                }
+
                 @SuppressWarnings("unchecked")
                 List<Element<Map<String,Object>>> applicationPayments =
-                    (List<Element<Map<String,Object>>>) application.get("applicationPayments");
-                List<LocalDateTime> paymentDates = new ArrayList<>();
+                    (List<Element<Map<String,Object>>>) application.getOrDefault("applicationPayments", null);
 
+                if (isNull(applicationPayments)) {
+                    throw new AssertionError(format("Migration 2555, case with id: %s "
+                        + "has no applicationPayments in case data as expected", caseDetails.getId()));
+                }
+
+                List<LocalDateTime> paymentDates = new ArrayList<>();
                 for (Element<Map<String,Object>> payment : applicationPayments) {
                     paymentDates.add((LocalDateTime) payment.getValue().get("created"));
                 }
@@ -137,9 +150,15 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
                 break;
             case "Submitted":
                 @SuppressWarnings("unchecked")
-                Map<String, Object> applicationData = (Map<String, Object>) caseDetails.getData().get("application");
-                LocalDate dateSubmitted = (LocalDate) applicationData.get("dateSubmitted");
+                Map<String, Object> applicationData = (Map<String, Object>) caseDetails.getData()
+                    .getOrDefault("application", null);
 
+                if (isNull(applicationData)) {
+                    throw new AssertionError(format("Migration 2555, case with id: %s "
+                        + "has no application in case data as expected", caseDetails.getId()));
+                }
+
+                LocalDate dateSubmitted = (LocalDate) applicationData.get("dateSubmitted");
                 ttlMap.put("SystemTTL", dateSubmitted.plusDays(36524));
                 break;
             case "LaSubmitted":
