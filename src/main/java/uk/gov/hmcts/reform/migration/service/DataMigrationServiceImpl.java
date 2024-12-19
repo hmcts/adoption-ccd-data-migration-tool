@@ -121,17 +121,8 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
                 break;
             case "AwaitingPayment":
                 @SuppressWarnings("unchecked")
-                Map<String, Object> application = (Map<String, Object>) caseDetails.getData()
-                    .getOrDefault("application", null);
-
-                if (isNull(application)) {
-                    throw new AssertionError(format("Migration 2555, case with id: %s "
-                        + "has no application in case data as expected", caseDetails.getId()));
-                }
-
-                @SuppressWarnings("unchecked")
                 List<Element<Map<String,Object>>> applicationPayments =
-                    (List<Element<Map<String,Object>>>) application.getOrDefault("applicationPayments", null);
+                    (List<Element<Map<String,Object>>>) caseDetails.getData().getOrDefault("applicationPayments", null);
 
                 if (isNull(applicationPayments)) {
                     throw new AssertionError(format("Migration 2555, case with id: %s "
@@ -150,15 +141,13 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
                 break;
             case "Submitted":
                 @SuppressWarnings("unchecked")
-                Map<String, Object> applicationData = (Map<String, Object>) caseDetails.getData()
-                    .getOrDefault("application", null);
+                LocalDate dateSubmitted = (LocalDate) caseDetails.getData().getOrDefault("dateSubmitted", null);
 
-                if (isNull(applicationData)) {
+                if (isNull(dateSubmitted)) {
                     throw new AssertionError(format("Migration 2555, case with id: %s "
-                        + "has no application in case data as expected", caseDetails.getId()));
+                        + "has no dateSubmitted in case data as expected", caseDetails.getId()));
                 }
 
-                LocalDate dateSubmitted = (LocalDate) applicationData.get("dateSubmitted");
                 ttlMap.put("SystemTTL", dateSubmitted.plusDays(36524));
                 break;
             case "LaSubmitted":
