@@ -57,12 +57,18 @@ class DataMigrationServiceImplTest {
             .data(Map.of(
                 "court", court,
                 "application", Map.of(
-                    "dateSubmitted", LocalDateTime.of(2024, 1, 15, 0, 0),
+                    "dateSubmitted", LocalDate.of(2024, 1, 15),
                     "applicationPayments",
-                            List.of(Element.newElement(Map.of(
-                                "created", LocalDateTime.of(2024, 1, 16, 0, 0),
-                                "amount", 250
-                            )))
+                        List.of(
+                            Element.newElement(Map.of(
+                            "created", LocalDateTime.of(2024, 1, 16, 0, 0),
+                            "amount", 250
+                            )),
+                            Element.newElement(Map.of(
+                                "created", LocalDateTime.of(2024, 1, 18, 0, 0),
+                                "amount", 350
+                            ))
+                        )
                 )
             ))
             .build();
@@ -73,7 +79,7 @@ class DataMigrationServiceImplTest {
             .data(Map.of(
                 "court", court,
                 "application", Map.of(
-                    "dateSubmitted", LocalDateTime.of(2024, 1, 15, 0, 0)
+                    "dateSubmitted", LocalDate.of(2024, 1, 15)
                 )
             ))
             .build();
@@ -116,6 +122,43 @@ class DataMigrationServiceImplTest {
         expectedTtl.put("Suspend", "NO");
         expectedTtl.put("SystemTTL", expectedSystemTtl);
 
-        assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInDraftState).get("TTL")).isEqualTo(expectedTtl);
+        assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInDraftState).get("TTL"))
+            .isEqualTo(expectedTtl);
+    }
+
+    @Test
+    void shouldPopulateTtlOnCaseInAwaitingPaymentState() {
+        LocalDate expectedSystemTtl = LocalDate.of(2024, 1, 16).plusDays(36524);
+        Map<String, Object> expectedTtl = new HashMap<>();
+        expectedTtl.put("OverrideTTL", null);
+        expectedTtl.put("Suspend", "NO");
+        expectedTtl.put("SystemTTL", expectedSystemTtl);
+
+        assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInAwaitingPaymentState).get("TTL"))
+            .isEqualTo(expectedTtl);
+    }
+
+    @Test
+    void shouldPopulateTtlOnCaseSubmittedState() {
+        LocalDate expectedSystemTtl = LocalDate.of(2024, 1, 15).plusDays(36524);
+        Map<String, Object> expectedTtl = new HashMap<>();
+        expectedTtl.put("OverrideTTL", null);
+        expectedTtl.put("Suspend", "NO");
+        expectedTtl.put("SystemTTL", expectedSystemTtl);
+
+        assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInSubmittedState).get("TTL"))
+            .isEqualTo(expectedTtl);
+    }
+
+    @Test
+    void shouldPopulateTtlOnCaseInLaSubmittedState() {
+        LocalDate expectedSystemTtl = LocalDate.of(2024, 2, 1).plusDays(36524);
+        Map<String, Object> expectedTtl = new HashMap<>();
+        expectedTtl.put("OverrideTTL", null);
+        expectedTtl.put("Suspend", "NO");
+        expectedTtl.put("SystemTTL", expectedSystemTtl);
+
+        assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInLaSubmittedState).get("TTL"))
+            .isEqualTo(expectedTtl);
     }
 }

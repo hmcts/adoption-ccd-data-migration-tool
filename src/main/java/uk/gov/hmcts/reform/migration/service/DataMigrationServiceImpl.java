@@ -16,7 +16,8 @@ import uk.gov.hmcts.reform.migration.query.MustNot;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,24 +124,23 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
                 @SuppressWarnings("unchecked")
                 List<Element<Map<String,Object>>> applicationPayments =
                     (List<Element<Map<String,Object>>>) application.get("applicationPayments");
+                List<LocalDateTime> paymentDates = new ArrayList<>();
 
-                applicationPayments.sort((element1, element2) ->
-                    convertValueToLocalDate(element1.getValue().get("created"))
-                        .compareTo(convertValueToLocalDate(element2.getValue().get("created"))));
+                for (Element<Map<String,Object>> payment : applicationPayments) {
+                    paymentDates.add((LocalDateTime) payment.getValue().get("created"));
+                }
 
-                LocalDateTime oldestApplicationCreatedDate = (LocalDateTime) applicationPayments
-                    .get(0)
-                    .getValue()
-                    .get("created");
+                Collections.sort(paymentDates);
+                LocalDateTime oldestApplicationCreatedDate = paymentDates.get(0);
 
-                ttlMap.put("SystemTTL", convertValueToLocalDate(oldestApplicationCreatedDate).plusDays(36524));
+                ttlMap.put("SystemTTL", oldestApplicationCreatedDate.toLocalDate().plusDays(36524));
                 break;
             case "Submitted":
                 @SuppressWarnings("unchecked")
                 Map<String, Object> applicationData = (Map<String, Object>) caseDetails.getData().get("application");
                 LocalDate dateSubmitted = (LocalDate) applicationData.get("dateSubmitted");
 
-                ttlMap.put("SystemTTL", convertValueToLocalDate(dateSubmitted).plusDays(36524));
+                ttlMap.put("SystemTTL", dateSubmitted.plusDays(36524));
                 break;
             case "LaSubmitted":
                 ttlMap.put("SystemTTL", caseDetails.getLastModified().toLocalDate().plusDays(36524));
@@ -153,9 +153,5 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
         HashMap<String, Object> updates = new HashMap<>();
         updates.put("TTL", ttlMap);
         return updates;
-    }
-
-    public LocalDate convertValueToLocalDate(Object dateOnCase) {
-        return LocalDate.parse(dateOnCase.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 }
