@@ -141,7 +141,7 @@ class DataMigrationServiceImplTest {
         LocalDate expectedSystemTtl = LocalDate.of(2024, 1, 1).plusDays(90);
         Map<String, Object> expectedTtl = new HashMap<>();
         expectedTtl.put("OverrideTTL", null);
-        expectedTtl.put("Suspend", "NO");
+        expectedTtl.put("Suspended", "No");
         expectedTtl.put("SystemTTL", expectedSystemTtl);
 
         assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInDraftState).get("TTL"))
@@ -153,7 +153,7 @@ class DataMigrationServiceImplTest {
         LocalDate expectedSystemTtl = LocalDate.of(2024, 1, 16).plusDays(36524);
         Map<String, Object> expectedTtl = new HashMap<>();
         expectedTtl.put("OverrideTTL", null);
-        expectedTtl.put("Suspend", "NO");
+        expectedTtl.put("Suspended", "No");
         expectedTtl.put("SystemTTL", expectedSystemTtl);
 
         assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInAwaitingPaymentState).get("TTL"))
@@ -165,7 +165,7 @@ class DataMigrationServiceImplTest {
         LocalDate expectedSystemTtl = LocalDate.of(2024, 1, 15).plusDays(36524);
         Map<String, Object> expectedTtl = new HashMap<>();
         expectedTtl.put("OverrideTTL", null);
-        expectedTtl.put("Suspend", "NO");
+        expectedTtl.put("Suspended", "No");
         expectedTtl.put("SystemTTL", expectedSystemTtl);
 
         assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInSubmittedState).get("TTL"))
@@ -177,7 +177,7 @@ class DataMigrationServiceImplTest {
         LocalDate expectedSystemTtl = LocalDate.of(2024, 2, 1).plusDays(36524);
         Map<String, Object> expectedTtl = new HashMap<>();
         expectedTtl.put("OverrideTTL", null);
-        expectedTtl.put("Suspend", "NO");
+        expectedTtl.put("Suspended", "No");
         expectedTtl.put("SystemTTL", expectedSystemTtl);
 
         assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInLaSubmittedState).get("TTL"))

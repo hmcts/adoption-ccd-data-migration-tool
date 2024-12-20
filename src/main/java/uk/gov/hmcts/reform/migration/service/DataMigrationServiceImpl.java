@@ -37,19 +37,20 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
     public static final String COURT = "court";
     private final Map<String, Function<CaseDetails, Map<String, Object>>> migrations = Map.of(
         "ADOP-log", this::triggerOnlyMigration,
-        "ADOP-2555", this::triggerTtlMigration
+        "ADOP-2555", this::triggerTtlMigration,
+        "ADOP-2555-suspend", this::triggerSuspendMigrationTtl
         );
 
     private final Map<String, EsQuery> queries = Map.of(
-        "ADOP-1234", this.closedCases()
+        "ADOP-log", this.casesInState("Draft")
     );
 
-    private EsQuery closedCases() {
-        final MatchQuery closedState = MatchQuery.of("state", "CLOSED");
+    private EsQuery casesInState(String state) {
+        final MatchQuery matchState = MatchQuery.of("state", state);
 
         return BooleanQuery.builder()
             .must(Must.builder()
-                .clauses(List.of(closedState))
+                .clauses(List.of(matchState))
                 .build())
             .build();
     }
@@ -113,7 +114,7 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
     public Map<String, Object> triggerTtlMigration(CaseDetails caseDetails) {
         HashMap<String, Object> ttlMap = new HashMap<>();
         ttlMap.put("OverrideTTL", null);
-        ttlMap.put("Suspend", "NO");
+        ttlMap.put("Suspended", "No");
 
         switch (caseDetails.getState()) {
             case "Draft":
@@ -159,6 +160,24 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
         }
 
         HashMap<String, Object> updates = new HashMap<>();
+        updates.put("TTL", ttlMap);
+        return updates;
+    }
+
+    public Map<String, Object> triggerSuspendMigrationTtl(CaseDetails caseDetails) {
+        HashMap<String, Object> updates = new HashMap<>();
+        HashMap<String, Object> ttlMap = new HashMap<>();
+
+        if (caseDetails.getData().containsKey("TTL")) {
+            ttlMap.put("OverrideTTL", caseDetails.getData().getOrDefault("OverrideTTL", null));
+            ttlMap.put("Suspended", "Yes");
+            ttlMap.put("SystemTTL", caseDetails.getData().getOrDefault("SystemTTL", null));
+        } else {
+            ttlMap.put("OverrideTTL", null);
+            ttlMap.put("Suspended", "Yes");
+            ttlMap.put("SystemTTL", null);
+        }
+
         updates.put("TTL", ttlMap);
         return updates;
     }
