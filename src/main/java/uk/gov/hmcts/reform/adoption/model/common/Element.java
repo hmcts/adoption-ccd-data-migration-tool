@@ -14,13 +14,13 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Element<T> {
-    private UUID id;
+    private String id;
 
     @NotNull
     @Valid
     private T value;
 
     public static <T> Element<T> newElement(T value) {
-        return Element.<T>builder().value(value).build();
+        return Element.<T>builder().id(UUID.randomUUID().toString()).value(value).build();
     }
 }
