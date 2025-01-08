@@ -1,5 +1,7 @@
 package uk.gov.hmcts.reform.migration.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import uk.gov.hmcts.reform.migration.query.MustNot;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -116,43 +119,54 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
         ttlMap.put("OverrideTTL", null);
         ttlMap.put("Suspended", "No");
 
+        ObjectMapper objectMapper = new ObjectMapper();
+
         switch (caseDetails.getState()) {
             case "Draft":
-                ttlMap.put("SystemTTL", caseDetails.getCreatedDate().toLocalDate().plusDays(90));
+                ttlMap.put("SystemTTL", caseDetails.getCreatedDate().toLocalDate().plusDays(90)
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                 break;
             case "AwaitingPayment":
-                @SuppressWarnings("unchecked")
-                List<Element<Map<String,Object>>> applicationPayments =
-                    (List<Element<Map<String,Object>>>) caseDetails.getData().getOrDefault("applicationPayments", null);
+                List<Element<Map<String,Object>>> applicationPayments = objectMapper.convertValue(
+                    caseDetails.getData().getOrDefault("applicationPayments", null),
+                    new TypeReference<List<Element<Map<String,Object>>>>() {}
+                );
 
                 if (isNull(applicationPayments)) {
                     throw new AssertionError(format("Migration 2555, case with id: %s "
                         + "has no applicationPayments in case data as expected", caseDetails.getId()));
                 }
 
-                List<LocalDateTime> paymentDates = new ArrayList<>();
+                List<LocalDate> paymentDates = new ArrayList<>();
                 for (Element<Map<String,Object>> payment : applicationPayments) {
-                    paymentDates.add((LocalDateTime) payment.getValue().get("created"));
+                    paymentDates.add(LocalDateTime.parse(payment.getValue().get("created").toString()).toLocalDate());
                 }
 
                 Collections.sort(paymentDates);
-                LocalDateTime oldestApplicationCreatedDate = paymentDates.get(0);
+                LocalDate oldestApplicationCreatedDate = paymentDates.get(0);
 
-                ttlMap.put("SystemTTL", oldestApplicationCreatedDate.toLocalDate().plusDays(36524));
+                ttlMap.put("SystemTTL", oldestApplicationCreatedDate.plusDays(36524)
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                 break;
             case "Submitted":
-                @SuppressWarnings("unchecked")
-                LocalDate dateSubmitted = (LocalDate) caseDetails.getData().getOrDefault("dateSubmitted", null);
+                String dateSubmittedString = objectMapper.convertValue(
+                    caseDetails.getData().getOrDefault("dateSubmitted", null),
+                    new TypeReference<String>() {}
+                );
 
-                if (isNull(dateSubmitted)) {
+                if (isNull(dateSubmittedString)) {
                     throw new AssertionError(format("Migration 2555, case with id: %s "
                         + "has no dateSubmitted in case data as expected", caseDetails.getId()));
                 }
 
-                ttlMap.put("SystemTTL", dateSubmitted.plusDays(36524));
+                LocalDate dateSubmitted = LocalDate.parse(dateSubmittedString);
+
+                ttlMap.put("SystemTTL", dateSubmitted.plusDays(36524)
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                 break;
             case "LaSubmitted":
-                ttlMap.put("SystemTTL", caseDetails.getLastModified().toLocalDate().plusDays(36524));
+                ttlMap.put("SystemTTL", caseDetails.getLastModified().toLocalDate().plusDays(36524)
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                 break;
             default:
                 throw new AssertionError(format("Migration 2555, case with id: %s "

@@ -60,18 +60,22 @@ class DataMigrationServiceImplTest {
             .createdDate(LocalDateTime.of(2024, 1, 1, 0, 0))
             .data(Map.of(
                 "court", court,
-                "dateSubmitted", LocalDate.of(2024, 1, 15),
+                "dateSubmitted", LocalDate.of(2024, 1, 15)
+                    .toString(),
                 "applicationPayments", List.of(
                     Element.newElement(Map.of(
-                        "created", LocalDateTime.of(2024, 1, 17, 0, 0),
+                        "created", LocalDateTime.of(2024, 1, 17, 0, 0)
+                            .toString(),
                         "amount", 350
                     )),
                     Element.newElement(Map.of(
-                        "created", LocalDateTime.of(2024, 1, 16, 0, 0),
+                        "created", LocalDateTime.of(2024, 1, 16, 0, 0)
+                            .toString(),
                         "amount", 250
                     )),
                     Element.newElement(Map.of(
-                        "created", LocalDateTime.of(2024, 1, 18, 0, 0),
+                        "created", LocalDateTime.of(2024, 1, 18, 0, 0)
+                            .toString(),
                         "amount", 450
                     ))
                 )
@@ -85,6 +89,7 @@ class DataMigrationServiceImplTest {
             .data(Map.of(
                 "court", court,
                 "dateSubmitted", LocalDate.of(2024, 1, 15)
+                    .toString()
             ))
             .build();
 
@@ -103,6 +108,7 @@ class DataMigrationServiceImplTest {
             .data(Map.of(
                 "court", court,
                 "dateSubmitted", LocalDate.of(2024, 1, 15)
+                    .toString()
             ))
             .build();
 
@@ -142,7 +148,7 @@ class DataMigrationServiceImplTest {
         Map<String, Object> expectedTtl = new HashMap<>();
         expectedTtl.put("OverrideTTL", null);
         expectedTtl.put("Suspended", "No");
-        expectedTtl.put("SystemTTL", expectedSystemTtl);
+        expectedTtl.put("SystemTTL", expectedSystemTtl.toString());
 
         assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInDraftState).get("TTL"))
             .isEqualTo(expectedTtl);
@@ -154,7 +160,7 @@ class DataMigrationServiceImplTest {
         Map<String, Object> expectedTtl = new HashMap<>();
         expectedTtl.put("OverrideTTL", null);
         expectedTtl.put("Suspended", "No");
-        expectedTtl.put("SystemTTL", expectedSystemTtl);
+        expectedTtl.put("SystemTTL", expectedSystemTtl.toString());
 
         assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInAwaitingPaymentState).get("TTL"))
             .isEqualTo(expectedTtl);
@@ -166,7 +172,7 @@ class DataMigrationServiceImplTest {
         Map<String, Object> expectedTtl = new HashMap<>();
         expectedTtl.put("OverrideTTL", null);
         expectedTtl.put("Suspended", "No");
-        expectedTtl.put("SystemTTL", expectedSystemTtl);
+        expectedTtl.put("SystemTTL", expectedSystemTtl.toString());
 
         assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInSubmittedState).get("TTL"))
             .isEqualTo(expectedTtl);
@@ -178,7 +184,7 @@ class DataMigrationServiceImplTest {
         Map<String, Object> expectedTtl = new HashMap<>();
         expectedTtl.put("OverrideTTL", null);
         expectedTtl.put("Suspended", "No");
-        expectedTtl.put("SystemTTL", expectedSystemTtl);
+        expectedTtl.put("SystemTTL", expectedSystemTtl.toString());
 
         assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInLaSubmittedState).get("TTL"))
             .isEqualTo(expectedTtl);
