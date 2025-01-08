@@ -33,6 +33,7 @@ class DataMigrationServiceImplTest {
     CaseDetails caseDetailsInLaSubmittedState;
     CaseDetails caseDetailsInAwaitingPaymentStateNoApplicationPayment;
     CaseDetails caseDetailsInSubmittedStateNoDateSubmitted;
+    CaseDetails caseDetailsWithTtl;
 
     @BeforeEach
     void setUp() {
@@ -118,6 +119,19 @@ class DataMigrationServiceImplTest {
             .createdDate(LocalDateTime.of(2024, 1, 1, 0, 0))
             .data(Map.of("court", court))
             .build();
+
+        caseDetailsWithTtl = CaseDetails.builder()
+            .id(1L)
+            .state("Draft")
+            .createdDate(LocalDateTime.of(2024, 1, 1, 0, 0))
+            .data(Map.of(
+                "court", court,
+                "TTL", Map.of(
+                    "Suspended", "No",
+                    "SystemTTL", "2025-12-31"
+                )
+            ))
+            .build();
     }
 
     @Test
@@ -188,6 +202,12 @@ class DataMigrationServiceImplTest {
 
         assertThat(dataMigrationService.triggerTtlMigration(caseDetailsInLaSubmittedState).get("TTL"))
             .isEqualTo(expectedTtl);
+    }
+
+    @Test
+    void shouldRemoveTtlOnCaseWhenRemoveMigrationIsRun() {
+        assertThat(dataMigrationService.triggerRemoveMigrationTtl(caseDetailsWithTtl).get("TTL"))
+            .isNull();
     }
 
     @Test

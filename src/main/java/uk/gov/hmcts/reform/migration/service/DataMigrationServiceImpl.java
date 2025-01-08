@@ -195,4 +195,16 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
         updates.put("TTL", ttlMap);
         return updates;
     }
+
+    public Map<String, Object> triggerRemoveMigrationTtl(CaseDetails caseDetails) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        HashMap<String, Object> updates = objectMapper.convertValue(caseDetails.getData(),
+            new TypeReference<HashMap<String, Object>>() {});
+
+        if (caseDetails.getData().containsKey("TTL")) {
+            updates.remove("TTL");
+        }
+
+        return updates;
+    }
 }
