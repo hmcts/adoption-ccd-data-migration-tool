@@ -197,12 +197,10 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
     }
 
     public Map<String, Object> triggerRemoveMigrationTtl(CaseDetails caseDetails) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        HashMap<String, Object> updates = objectMapper.convertValue(caseDetails.getData(),
-            new TypeReference<HashMap<String, Object>>() {});
+        HashMap<String, Object> updates = new HashMap<>();
 
         if (caseDetails.getData().containsKey("TTL")) {
-            updates.remove("TTL");
+            updates.put("TTL", null);
         }
 
         return updates;
