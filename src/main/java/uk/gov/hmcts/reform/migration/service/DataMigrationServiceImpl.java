@@ -138,8 +138,11 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
                 }
 
                 List<LocalDate> paymentDates = new ArrayList<>();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
                 for (Element<Map<String,Object>> payment : applicationPayments) {
-                    paymentDates.add(LocalDateTime.parse(payment.getValue().get("created").toString()).toLocalDate());
+                    String paymentString = payment.getValue().get("created").toString();
+
+                    paymentDates.add(LocalDateTime.parse(paymentString, formatter).toLocalDate());
                 }
 
                 Collections.sort(paymentDates);

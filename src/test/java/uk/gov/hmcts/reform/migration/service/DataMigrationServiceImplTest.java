@@ -65,18 +65,15 @@ class DataMigrationServiceImplTest {
                     .toString(),
                 "applicationPayments", List.of(
                     Element.newElement(Map.of(
-                        "created", LocalDateTime.of(2024, 1, 17, 0, 0)
-                            .toString(),
+                        "created", "2024-01-17T00:00:00.000Z",
                         "amount", 350
                     )),
                     Element.newElement(Map.of(
-                        "created", LocalDateTime.of(2024, 1, 16, 0, 0)
-                            .toString(),
+                        "created", "2024-01-16T00:00:00.000Z",
                         "amount", 250
                     )),
                     Element.newElement(Map.of(
-                        "created", LocalDateTime.of(2024, 1, 18, 0, 0)
-                            .toString(),
+                        "created", "2024-01-18T00:00:00.000Z",
                         "amount", 450
                     ))
                 )
