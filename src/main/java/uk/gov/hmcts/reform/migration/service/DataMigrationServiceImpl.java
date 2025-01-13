@@ -45,7 +45,7 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
         );
 
     private final Map<String, EsQuery> queries = Map.of(
-        "ADOP-log", this.casesInState("Draft")
+        "ADOP-2555", this.casesInState("Draft")
     );
 
     private EsQuery casesInState(String state) {
