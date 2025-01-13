@@ -204,7 +204,7 @@ class DataMigrationServiceImplTest {
     @Test
     void shouldRemoveTtlOnCaseWhenRemoveMigrationIsRun() {
         assertThat(dataMigrationService.triggerRemoveMigrationTtl(caseDetailsWithTtl).get("TTL"))
-            .isNull();
+            .isEqualTo(new HashMap<>());
     }
 
     @Test

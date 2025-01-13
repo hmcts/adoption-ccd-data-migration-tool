@@ -116,10 +116,10 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
 
     public Map<String, Object> triggerTtlMigration(CaseDetails caseDetails) {
         HashMap<String, Object> ttlMap = new HashMap<>();
+        ObjectMapper objectMapper = new ObjectMapper();
+
         ttlMap.put("OverrideTTL", null);
         ttlMap.put("Suspended", "No");
-
-        ObjectMapper objectMapper = new ObjectMapper();
 
         switch (caseDetails.getState()) {
             case "Draft":
@@ -184,11 +184,13 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
     public Map<String, Object> triggerSuspendMigrationTtl(CaseDetails caseDetails) {
         HashMap<String, Object> updates = new HashMap<>();
         HashMap<String, Object> ttlMap = new HashMap<>();
+        ObjectMapper objectMapper = new ObjectMapper();
 
         if (caseDetails.getData().containsKey("TTL")) {
-            ttlMap.put("OverrideTTL", caseDetails.getData().getOrDefault("OverrideTTL", null));
-            ttlMap.put("Suspended", "Yes");
-            ttlMap.put("SystemTTL", caseDetails.getData().getOrDefault("SystemTTL", null));
+            ttlMap = objectMapper.convertValue(caseDetails.getData().get("TTL"),
+                new TypeReference<HashMap<String, Object>>() {});
+
+            ttlMap.replace("Suspended", "Yes");
         } else {
             ttlMap.put("OverrideTTL", null);
             ttlMap.put("Suspended", "Yes");
@@ -203,7 +205,7 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
         HashMap<String, Object> updates = new HashMap<>();
 
         if (caseDetails.getData().containsKey("TTL")) {
-            updates.put("TTL", null);
+            updates.put("TTL", new HashMap<>());
         }
 
         return updates;
