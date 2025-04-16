@@ -4,12 +4,9 @@ job:
   schedule: "20 * * * *"
   ingressHost: adoption-cron-ccd-data-migration-tool-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal
   aadIdentityName: adoption
-  #  Uncomment once the vault containing the app insights key has been set up
   keyVaults:
     adoption:
       secrets:
-        - name: AppInsightsInstrumentationKey
-          alias: azure.application-insights.instrumentation-key
         - name: idam-system-user-name
           alias: IDAM_USERNAME
         - name: idam-system-user-password
