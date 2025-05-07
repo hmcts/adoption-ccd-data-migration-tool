@@ -41,7 +41,8 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
     private final Map<String, Function<CaseDetails, Map<String, Object>>> migrations = Map.of(
         "ADOP-log", this::triggerOnlyMigration,
         "ADOP-2555", this::triggerTtlMigration,
-        "ADOP-2555-suspend", this::triggerSuspendMigrationTtl
+        "ADOP-2555-suspend", this::triggerSuspendMigrationTtl,
+        "ADOP-2620", this::triggerOnlyMigration
         );
 
     private final Map<String, EsQuery> queries = Map.of(
