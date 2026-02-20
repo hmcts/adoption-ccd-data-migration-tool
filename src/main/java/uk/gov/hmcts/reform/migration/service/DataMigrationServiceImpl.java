@@ -42,7 +42,7 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
         "ADOP-log", this::triggerOnlyMigration,
         "ADOP-2555", this::triggerTtlMigration,
         "ADOP-2555-suspend", this::triggerSuspendMigrationTtl,
-        "ADOP-2620", this::triggerOnlyMigration
+        "ADOP-2756", this::triggerOnlyMigration
         );
 
     private final Map<String, EsQuery> queries = Map.of(
