@@ -176,6 +176,7 @@
    <cve>CVE-2026-40975</cve>
    <cve>CVE-2026-40973</cve>
    <cve>CVE-2026-40977</cve>
+   <cve>CVE-2026-22731</cve>
 </suppress>
 <suppress>
    <notes>
@@ -184,6 +185,7 @@
    <cve>CVE-2026-22748</cve>
    <cve>CVE-2026-22751</cve>
    <cve>CVE-2026-22746</cve>
+   <cve>CVE-2026-22732</cve>
 </suppress>
   <!--End of DFPL-3225-->
 
