@@ -15,7 +15,11 @@
   </suppress>
   <!--End of false positives section -->
 
-  <!--Please add all the temporary suppression under the below section
+  <!--Please add all the temporary suppression under the below section-->
   <suppress>
-  </suppress>-->
+    <!-- spring-aop-6.2.19, spring-beans-6.2.19, spring-context-6.2.19, spring-context-support-6.2.19,
+    spring-core-6.2.19, spring-expression-6.2.19, spring-jcl-6.2.19, spring-web-6.2.19 -->
+    <cve>CVE-2026-59313</cve>
+    <cve>CVE-2026-59314</cve>
+  </suppress>
 </suppressions>
