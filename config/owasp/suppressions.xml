@@ -34,6 +34,8 @@
     spring-security-oauth2-resource-server-6.5.11, spring-security-web-6.5.11 -->
     <cve>CVE-2026-59270</cve>
     <cve>CVE-2026-59276</cve>
+    <cve>CVE-2026-47841</cve>
+    <cve>CVE-2026-47842</cve>
 
   </suppress>
 </suppressions>
